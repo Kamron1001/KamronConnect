@@ -9,26 +9,22 @@ const wss = new WebSocket.Server({ server });
 
 let messages = []; // Массив для хранения сообщений
 
+// Обслуживание статических файлов
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Обработка WebSocket соединений
 wss.on('connection', (ws) => {
     console.log('New client connected');
 
-    // Отправка существующих сообщений при подключении нового клиента
-    ws.send(JSON.stringify(messages));
+    ws.send(JSON.stringify(messages)); // Отправка сообщений новому клиенту
 
-    // Обработка полученных сообщений
     ws.on('message', (message) => {
-        const parsedMessage = JSON.parse(message); // Парсинг сообщения
-
+        const parsedMessage = JSON.parse(message);
         if (parsedMessage.type === 'newMessage') {
-            messages.push(parsedMessage.content); // Сохраняем новое сообщение
-        } else if (parsedMessage.type === 'editMessage') {
-            messages[parsedMessage.index] = parsedMessage.content; // Редактируем сообщение
-        } else if (parsedMessage.type === 'deleteMessage') {
-            messages.splice(parsedMessage.index, 1); // Удаляем сообщение
+            messages.push(parsedMessage.content); // Сохраняем сообщение
         }
 
-        // Отправляем обновленный массив сообщений всем клиентам
+        // Обновляем всех клиентов
         wss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(messages));
@@ -41,8 +37,10 @@ wss.on('connection', (ws) => {
     });
 });
 
-// Настройка статических файлов
-app.use(express.static(path.join(__dirname, 'public')));
+// Обработка запроса на главную страницу
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
