@@ -1,37 +1,292 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат</title>
-    <link rel="stylesheet" href="style.css">
+    <title>CamronConnect</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #74ebd5, #9face6); /* Градиент фона */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            position: relative;
+        }
+        #chat {
+            display: none;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8); /* Неоновый эффект */
+        }
+        .message {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .message-content {
+            display: flex;
+            align-items: center;
+        }
+        .message-text {
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        .message-actions {
+            display: flex;
+            gap: 5px;
+        }
+        input[type="text"], input[type="password"] {
+            width: calc(100% - 80px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #007BFF; /* Цвет кнопок */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3; /* Цвет кнопок при наведении */
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        /* Заголовок CamronConnect */
+        #header {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
+    <div id="header">CamronConnect</div>
+    
+    <!-- Чат -->
     <div id="chat">
         <div id="messages"></div>
-        <input type="text" id="messageInput" placeholder="Введите сообщение">
-        <button id="sendMessage">Отправить</button>
+        <input type="text" id="input" placeholder="Введите сообщение...">
+        <button id="send">Отправить</button>
     </div>
-    <script src="public/script.js"></script>
+
+    <!-- Форма регистрации -->
+    <div id="registrationForm">
+        <h2>Регистрация</h2>
+        <input type="text" id="regUsername" placeholder="Имя пользователя" required>
+        <input type="password" id="regPassword" placeholder="Пароль" required>
+        <button id="register">Зарегистрироваться</button>
+        <button id="showLogin">Уже есть аккаунт? Войти</button>
+    </div>
+
+    <!-- Форма входа -->
+    <div id="loginForm" style="display:none;">
+        <h2>Вход</h2>
+        <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+        <input type="password" id="loginPassword" placeholder="Пароль" required>
+        <button id="login">Войти</button>
+        <button id="showRegistration">Нет аккаунта? Зарегистрироваться</button>
+    </div>
+</div>
+
+<script>
+    const messagesElement = document.getElementById('messages');
+    const inputElement = document.getElementById('input');
+    const sendButton = document.getElementById('send');
+    const chatElement = document.getElementById('chat');
+
+    const registrationForm = document.getElementById('registrationForm');
+    const loginForm = document.getElementById('loginForm');
+    const regUsernameInput = document.getElementById('regUsername');
+    const regPasswordInput = document.getElementById('regPassword');
+    const loginUsernameInput = document.getElementById('loginUsername');
+    const loginPasswordInput = document.getElementById('loginPassword');
+    const registerButton = document.getElementById('register');
+    const loginButton = document.getElementById('login');
+    const showLoginButton = document.getElementById('showLogin');
+    const showRegistrationButton = document.getElementById('showRegistration');
+
+    let messages = JSON.parse(localStorage.getItem('messages')) || [];
+    let users = JSON.parse(localStorage.getItem('users')) || {};
+
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+    // Загружаем сообщения
+    function loadMessages() {
+        messagesElement.innerHTML = '';
+        messages.forEach((message, index) => {
+            appendMessage(message.text, message.username, index);
+        });
+    }
+
+    // Добавляем сообщение на экран
+    function appendMessage(text, username, index) {
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+
+        const messageText = document.createElement('span');
+        messageText.className = 'message-text';
+        messageText.innerHTML = `<strong>${username}:</strong> ${text}`;
+
+        messageContent.appendChild(messageText);
+
+        const messageActions = document.createElement('div');
+        messageActions.className = 'message-actions';
+
+        // Показываем кнопки редактирования и удаления только для сообщений текущего пользователя
+        if (username === currentUser?.username) {
+            // Кнопка редактирования
+            const editButton = document.createElement('button');
+            editButton.textContent = '✏️';
+            editButton.onclick = () => editMessage(index);
+
+            // Кнопка удаления
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '🗑️';
+            deleteButton.onclick = () => deleteMessage(index);
+
+            messageActions.appendChild(editButton);
+            messageActions.appendChild(deleteButton);
+        }
+
+        messageElement.appendChild(messageContent);
+        messageElement.appendChild(messageActions);
+        messagesElement.appendChild(messageElement);
+    }
+
+    // Показать чат
+    function showChat() {
+        registrationForm.style.display = 'none';
+        loginForm.style.display = 'none';
+        chatElement.style.display = 'block';
+        loadMessages();
+    }
+
+    // Регистрация
+    registerButton.onclick = () => {
+        const username = regUsernameInput.value.trim();
+        const password = regPasswordInput.value.trim();
+
+        if (!username || !password) {
+            alert('Введите имя пользователя и пароль!');
+            return;
+        }
+
+        // Проверяем, зарегистрирован ли пользователь
+        if (users[username]) {
+            alert('Пользователь уже зарегистрирован!');
+        } else {
+            // Регистрация нового пользователя
+            users[username] = { password };
+            localStorage.setItem('users', JSON.stringify(users));
+            currentUser = { username, password };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showChat();
+        }
+    };
+
+    // Вход
+    loginButton.onclick = () => {
+        const username = loginUsernameInput.value.trim();
+        const password = loginPasswordInput.value.trim();
+
+        if (!username || !password) {
+            alert('Введите имя пользователя и пароль!');
+            return;
+        }
+
+        // Проверяем, зарегистрирован ли пользователь
+        if (users[username]) {
+            if (users[username].password === password) {
+                currentUser = { username, password };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showChat();
+            } else {
+                alert('Неверный пароль!');
+            }
+        } else {
+            alert('Пользователь не найден!');
+        }
+    };
+
+    // Показать форму входа
+    showLoginButton.onclick = () => {
+        registrationForm.style.display = 'none';
+        loginForm.style.display = 'block';
+    };
+
+    // Показать форму регистрации
+    showRegistrationButton.onclick = () => {
+        loginForm.style.display = 'none';
+        registrationForm.style.display = 'block';
+    };
+
+    // Отправка сообщения
+    sendButton.onclick = () => {
+        const text = inputElement.value.trim();
+        if (text && currentUser) {
+            const newMessage = { text, username: currentUser.username };
+            messages.push(newMessage);
+            localStorage.setItem('messages', JSON.stringify(messages));
+            loadMessages();
+            inputElement.value = '';
+        }
+    };
+
+    // Редактирование сообщения
+    function editMessage(index) {
+        const newText = prompt('Редактируйте сообщение:', messages[index].text);
+        if (newText) {
+            messages[index].text = newText;
+            localStorage.setItem('messages', JSON.stringify(messages));
+            loadMessages();
+        }
+    }
+
+    // Удаление сообщения
+    function deleteMessage(index) {
+        messages.splice(index, 1);
+        localStorage.setItem('messages', JSON.stringify(messages));
+        loadMessages();
+    }
+
+    // Проверка, если пользователь уже вошел
+    if (currentUser) {
+        showChat();
+    }
+</script>
 </body>
 </html>
-=======
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат</title>
-    <link rel="stylesheet" href="public/style.css">
-</head>
-<body>
-    <div id="chat">
-        <div id="messages"></div>
-        <input type="text" id="messageInput" placeholder="Введите сообщение">
-        <button id="sendMessage">Отправить</button>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
->>>>>>> 6072a9df6daace73aff36566d1160784634c091b
