@@ -6,7 +6,10 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+>>>>>>> 1bc274dbb2045e5422a8c4c9f7f93e4943f89bbb
 
 const app = express();
 const server = http.createServer(app);
@@ -21,6 +24,7 @@ app.use(session({
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+<<<<<<< HEAD
 const usersFilePath = path.join(__dirname, 'users.json');
 
 // Функция для чтения пользователей из JSON-файла
@@ -37,6 +41,8 @@ function writeUsers(users) {
     fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
 }
 
+=======
+>>>>>>> 1bc274dbb2045e5422a8c4c9f7f93e4943f89bbb
 const users = {};
 const messages = [];
 
@@ -76,7 +82,10 @@ wss.on('connection', (ws, req) => {
 app.post('/register', upload.single('icon'), (req, res) => {
     const { username, password } = req.body;
     const iconPath = req.file ? req.file.path : null;
+<<<<<<< HEAD
     const users = readUsers(); // Читаем пользователей из файла
+=======
+>>>>>>> 1bc274dbb2045e5422a8c4c9f7f93e4943f89bbb
 
     if (Object.values(users).some(user => user.username === username)) {
         return res.status(400).send('Пользователь уже существует');
@@ -84,7 +93,10 @@ app.post('/register', upload.single('icon'), (req, res) => {
 
     const userId = Date.now();
     users[userId] = { username, password, icon: iconPath };
+<<<<<<< HEAD
     writeUsers(users); // Записываем пользователей обратно в файл
+=======
+>>>>>>> 1bc274dbb2045e5422a8c4c9f7f93e4943f89bbb
     req.session.userId = userId;
 
     res.redirect('/chat.html');
@@ -93,7 +105,10 @@ app.post('/register', upload.single('icon'), (req, res) => {
 // Обработка входа
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
+<<<<<<< HEAD
     const users = readUsers(); // Читаем пользователей из файла
+=======
+>>>>>>> 1bc274dbb2045e5422a8c4c9f7f93e4943f89bbb
 
     const user = Object.values(users).find(user => user.username === username && user.password === password);
     if (!user) {
